@@ -135,6 +135,8 @@ The easiest path is the setup script:
 ./scripts/setup.sh /path/to/your/project
 ```
 
+If the target repo already contains `wiki/` content or `.opencode/plugins/llm-wiki.js`, the script now prints a warning before replacing or merging those paths. Use `--force` to skip the confirmation prompt.
+
 That creates this structure inside the target project:
 
 ```text
@@ -149,6 +151,36 @@ your-project/
 ```
 
 Then run OpenCode from the target project root, not from `wiki/`.
+
+## Upgrade an Existing Install
+
+Use the upgrade script instead of rerunning setup:
+
+```bash
+./scripts/upgrade.sh /path/to/your/project
+```
+
+What it upgrades:
+
+- `wiki/AGENTS.md`
+- `wiki/scripts/`
+- `wiki/opencode.json`
+- `wiki/pyproject.toml`
+- `.opencode/plugins/llm-wiki.js`
+- `.opencode/package.json`
+
+What it preserves:
+
+- `wiki/daily/`
+- `wiki/knowledge/`
+- `wiki/scripts/state.json`
+- `wiki/scripts/last-flush.json`
+
+By default it leaves the target repo's root `opencode.json` alone. If you want to replace that too, run:
+
+```bash
+./scripts/upgrade.sh --sync-root-config /path/to/your/project
+```
 
 ## Commands
 

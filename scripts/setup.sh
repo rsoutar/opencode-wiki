@@ -1,16 +1,79 @@
 #!/usr/bin/env bash
-# Usage: ./scripts/setup.sh /path/to/your/repo
+# Usage: ./scripts/setup.sh [--force] /path/to/your/repo
 # Copies llm-wiki into a 'wiki/' subdirectory of your project
 # and sets up the OpenCode plugin at the project root.
 
 set -euo pipefail
 
 WIKI_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+FORCE=0
 
-if [ $# -lt 1 ]; then
-  echo "Usage: $0 /path/to/your/project"
+usage() {
+  echo "Usage: $0 [--force] /path/to/your/project"
   echo ""
   echo "Example: $0 ~/projects/trading-bot"
+}
+
+confirm_replacements() {
+  local -a replacements=("$@")
+  local path
+
+  if [ ${#replacements[@]} -eq 0 ]; then
+    return 0
+  fi
+
+  echo "Warning: setup will replace or merge into existing llm-wiki files:"
+  for path in "${replacements[@]}"; do
+    echo "  - $path"
+  done
+  echo ""
+
+  if [ "$FORCE" -eq 1 ]; then
+    return 0
+  fi
+
+  if [ ! -t 0 ]; then
+    echo "Non-interactive shell detected. Re-run with --force to continue."
+    exit 1
+  fi
+
+  read -r -p "Continue? [y/N] " response
+  case "$response" in
+    [yY]|[yY][eE][sS]) ;;
+    *)
+      echo "Aborted."
+      exit 1
+      ;;
+  esac
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --force)
+      FORCE=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      usage
+      exit 1
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ $# -lt 1 ]; then
+  usage
   exit 1
 fi
 
@@ -22,6 +85,30 @@ if [ ! -d "$TARGET" ]; then
 fi
 
 echo "Setting up llm-wiki in $TARGET/wiki/"
+
+declare -a REPLACEMENTS=()
+for rel_path in \
+  "wiki/AGENTS.md" \
+  "wiki/opencode.json" \
+  "wiki/pyproject.toml" \
+  "wiki/scripts" \
+  "wiki/daily" \
+  "wiki/knowledge" \
+  ".opencode/plugins/llm-wiki.js" \
+  ".opencode/package.json"; do
+  if [ -e "$TARGET/$rel_path" ]; then
+    REPLACEMENTS+=("$TARGET/$rel_path")
+  fi
+done
+
+if [ -f "$TARGET/opencode.json" ]; then
+  echo "Warning: $TARGET/opencode.json already exists and will not be replaced."
+  echo "  Make sure it has 'instructions' pointing to wiki/AGENTS.md:"
+  echo '    "instructions": ["wiki/AGENTS.md"]'
+  echo ""
+fi
+
+confirm_replacements "${REPLACEMENTS[@]}"
 
 # 1. Copy wiki files into wiki/ subdirectory
 mkdir -p "$TARGET/wiki"
@@ -47,9 +134,7 @@ fi
 
 # 4. Create opencode.json at project root (if not exists)
 if [ -f "$TARGET/opencode.json" ]; then
-  echo "Warning: $TARGET/opencode.json already exists. Skipping."
-  echo "  Make sure it has 'instructions' pointing to wiki/AGENTS.md:"
-  echo '    "instructions": ["wiki/AGENTS.md"]'
+  echo "Root opencode.json already exists. Skipping creation."
 else
   cat > "$TARGET/opencode.json" << 'EOF'
 {
