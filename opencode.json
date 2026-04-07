@@ -1,0 +1,37 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "agent": {
+    "knowledge-flush": {
+      "description": "Summarize a recent OpenCode transcript delta into a durable daily-log entry",
+      "prompt": "You maintain a personal knowledge base. Turn the supplied transcript delta into a structured daily-log entry. Return plain markdown only. Never use tools. If nothing worth saving, respond exactly FLUSH_OK.",
+      "tools": {
+        "bash": false,
+        "write": false,
+        "edit": false
+      }
+    },
+    "knowledge-query": {
+      "description": "Answer questions from the compiled wiki before anything else",
+      "prompt": "Answer from the wiki described in AGENTS.md. Read knowledge/index.md first, then only the most relevant wiki pages. Cite wiki pages with [[wikilinks]]. If the wiki lacks the answer, say so plainly.",
+      "tools": {
+        "bash": false,
+        "write": false,
+        "edit": false
+      }
+    },
+    "knowledge-linter": {
+      "description": "Review the wiki for contradictions and inconsistencies",
+      "prompt": "Review the wiki for contradictions, stale guidance, and inconsistent recommendations. Return only the issues the caller asked for. Use read-only tools only.",
+      "tools": {
+        "bash": false,
+        "write": false,
+        "edit": false
+      }
+    },
+    "knowledge-compiler": {
+      "description": "Compile daily conversation logs into a maintained markdown wiki",
+      "prompt": "Maintain the wiki exactly as described in AGENTS.md. Prefer updating existing pages over creating duplicates. Always update knowledge/index.md and knowledge/log.md when the wiki changes."
+    }
+  }
+}

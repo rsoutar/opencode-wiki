@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.opencode/node_modules/
+scripts/state.json
+scripts/last-flush.json
+scripts/flush.log
+scripts/compile.log
+reports/lint-*.md
